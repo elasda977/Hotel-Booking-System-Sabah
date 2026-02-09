@@ -52,16 +52,38 @@ function BookingPage() {
     fetchRoom();
   }, [fetchRoom]);
 
-  const calculateTotalPrice = useCallback(() => {
+  const [priceBreakdown, setPriceBreakdown] = useState(null);
+
+  const calculateTotalPrice = useCallback(async () => {
     if (formData.check_in && formData.check_out && room) {
       const checkIn = new Date(formData.check_in);
       const checkOut = new Date(formData.check_out);
       const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
 
       if (nights > 0) {
-        setTotalPrice(nights * room.price_per_night);
+        try {
+          const res = await axios.post(`${API_URL}/bookings/calculate-price`, {
+            check_in: formData.check_in,
+            check_out: formData.check_out,
+            room_price: room.price_per_night,
+            room_type: room.room_type
+          });
+          setTotalPrice(res.data.total_price);
+          setPriceBreakdown(res.data.breakdown);
+          setError('');
+        } catch (err) {
+          if (err.response?.data?.error) {
+            setError(err.response.data.error);
+            setTotalPrice(0);
+            setPriceBreakdown(null);
+          } else {
+            setTotalPrice(nights * room.price_per_night);
+            setPriceBreakdown(null);
+          }
+        }
       } else {
         setTotalPrice(0);
+        setPriceBreakdown(null);
       }
     }
   }, [formData.check_in, formData.check_out, room]);
@@ -187,6 +209,17 @@ function BookingPage() {
             <div className="price-summary">
               <h3>Total Price</h3>
               <p className="total-price">RM{totalPrice}</p>
+              {priceBreakdown && priceBreakdown.some(n => n.notes !== 'Standard rate') && (
+                <div className="price-breakdown">
+                  <h4>Nightly Breakdown</h4>
+                  {priceBreakdown.map((night, i) => (
+                    <div key={i} className="breakdown-row">
+                      <span>{new Date(night.date).toLocaleDateString('en-GB')}</span>
+                      <span>RM{night.total} {night.notes !== 'Standard rate' ? `(${night.notes})` : ''}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

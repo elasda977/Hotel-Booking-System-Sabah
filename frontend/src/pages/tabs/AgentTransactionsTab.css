@@ -1,0 +1,14 @@
+.agent-transactions .summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.agent-transactions .filter-section {
+  margin-bottom: 1.5rem;
+}
+
+.agent-transactions .filter-section select {
+  max-width: 400px;
+}

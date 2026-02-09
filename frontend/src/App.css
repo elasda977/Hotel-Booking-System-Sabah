@@ -37,6 +37,36 @@
   background-color: #34495e;
 }
 
+.nav-user {
+  color: #bdc3c7;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+.nav-logout {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.price-breakdown {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.price-breakdown h4 {
+  margin-bottom: 0.5rem;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #eee;
+}
+
 .container {
   max-width: 1200px;
   margin: 2rem auto;

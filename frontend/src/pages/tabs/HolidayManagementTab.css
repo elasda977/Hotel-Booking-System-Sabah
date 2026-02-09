@@ -1,0 +1,18 @@
+.holiday-management .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding-top: 1.5rem;
+}
+
+.holiday-management .checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.holiday-management .form-actions-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}

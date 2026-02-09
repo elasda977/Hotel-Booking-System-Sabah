@@ -40,11 +40,17 @@ function AgentBookingPage() {
 
   const fetchRoomTypes = async () => {
     try {
-      const response = await axios.get(`${API_URL}/rooms`);
-      const types = [...new Set(response.data.map(room => room.room_type))];
-      setRoomTypes(types);
+      const response = await axios.get(`${API_URL}/categories`);
+      setRoomTypes(response.data.map(cat => cat.name));
     } catch (error) {
-      console.error('Error fetching room types:', error);
+      // Fallback to room-based types if categories API fails
+      try {
+        const roomResponse = await axios.get(`${API_URL}/rooms`);
+        const types = [...new Set(roomResponse.data.map(room => room.room_type))];
+        setRoomTypes(types);
+      } catch (err) {
+        console.error('Error fetching room types:', err);
+      }
     }
   };
 
@@ -59,10 +65,6 @@ function AgentBookingPage() {
     setLoading(true);
 
     try {
-      const checkIn = new Date(bookingData.check_in);
-      const checkOut = new Date(bookingData.check_out);
-      const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-
       // Get room price for the selected type
       const roomResponse = await axios.get(`${API_URL}/rooms`);
       const room = roomResponse.data.find(r => r.room_type === bookingData.room_type);
@@ -73,7 +75,28 @@ function AgentBookingPage() {
         return;
       }
 
-      const totalPrice = room.price_per_night * nights;
+      // Use server-side price calculation
+      let totalPrice;
+      try {
+        const priceRes = await axios.post(`${API_URL}/bookings/calculate-price`, {
+          check_in: bookingData.check_in,
+          check_out: bookingData.check_out,
+          room_price: room.price_per_night,
+          room_type: bookingData.room_type
+        });
+        totalPrice = priceRes.data.total_price;
+      } catch (priceErr) {
+        if (priceErr.response?.data?.error) {
+          alert(priceErr.response.data.error);
+          setLoading(false);
+          return;
+        }
+        // Fallback to simple calculation
+        const checkIn = new Date(bookingData.check_in);
+        const checkOut = new Date(bookingData.check_out);
+        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+        totalPrice = room.price_per_night * nights;
+      }
 
       const bookingPayload = {
         ...bookingData,

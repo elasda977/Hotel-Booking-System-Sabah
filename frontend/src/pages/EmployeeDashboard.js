@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import authAxios, { getUser, isAdmin } from '../utils/auth';
+import CategoryManagementTab from './tabs/CategoryManagementTab';
+import UserManagementTab from './tabs/UserManagementTab';
+import HolidayManagementTab from './tabs/HolidayManagementTab';
+import RateManagementTab from './tabs/RateManagementTab';
+import AgentTransactionsTab from './tabs/AgentTransactionsTab';
 import './EmployeeDashboard.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 function EmployeeDashboard() {
   const navigate = useNavigate();
+  const user = getUser();
+  const userIsAdmin = isAdmin();
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeSubMenu, setActiveSubMenu] = useState('');
   const [stats, setStats] = useState({});
@@ -78,6 +84,7 @@ function EmployeeDashboard() {
       fetchAgents();
     } else if (activeTab === 'history') {
       fetchRoomHistory();
+      fetchRooms();
     } else if (activeTab === 'dashboard') {
       fetchStats();
     }
@@ -91,7 +98,7 @@ function EmployeeDashboard() {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get(`${API_URL}/dashboard/stats`);
+      const response = await authAxios.get('/dashboard/stats');
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -100,7 +107,7 @@ function EmployeeDashboard() {
 
   const fetchBookings = async () => {
     try {
-      const response = await axios.get(`${API_URL}/bookings`);
+      const response = await authAxios.get('/bookings');
       setBookings(response.data);
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -109,7 +116,7 @@ function EmployeeDashboard() {
 
   const fetchRoomStatus = async () => {
     try {
-      const response = await axios.get(`${API_URL}/room-status`);
+      const response = await authAxios.get('/room-status');
       setRoomStatus(response.data);
     } catch (error) {
       console.error('Error fetching room status:', error);
@@ -118,7 +125,7 @@ function EmployeeDashboard() {
 
   const fetchRooms = async () => {
     try {
-      const response = await axios.get(`${API_URL}/rooms`);
+      const response = await authAxios.get('/rooms');
       setRooms(response.data);
     } catch (error) {
       console.error('Error fetching rooms:', error);
@@ -127,7 +134,7 @@ function EmployeeDashboard() {
 
   const fetchAgents = async () => {
     try {
-      const response = await axios.get(`${API_URL}/agents`);
+      const response = await authAxios.get('/agents');
       setAgents(response.data);
     } catch (error) {
       console.error('Error fetching agents:', error);
@@ -136,7 +143,7 @@ function EmployeeDashboard() {
 
   const fetchMaintenanceRecords = async () => {
     try {
-      const response = await axios.get(`${API_URL}/room-maintenance`);
+      const response = await authAxios.get('/room-maintenance');
       setMaintenanceRecords(response.data);
     } catch (error) {
       console.error('Error fetching maintenance records:', error);
@@ -149,7 +156,7 @@ function EmployeeDashboard() {
       if (historyFilter.date) params.date = historyFilter.date;
       if (historyFilter.room_id) params.room_id = historyFilter.room_id;
 
-      const response = await axios.get(`${API_URL}/room-history`, { params });
+      const response = await authAxios.get('/room-history', { params });
       setRoomHistory(response.data);
     } catch (error) {
       console.error('Error fetching room history:', error);
@@ -158,7 +165,7 @@ function EmployeeDashboard() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get(`${API_URL}/notifications/unread`);
+      const response = await authAxios.get('/notifications/unread');
       setNotifications(response.data.count);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -167,7 +174,7 @@ function EmployeeDashboard() {
 
   const markAsRead = async (bookingId) => {
     try {
-      await axios.put(`${API_URL}/bookings/${bookingId}`, {
+      await authAxios.put(`/bookings/${bookingId}`, {
         read_by_employee: true
       });
       fetchBookings();
@@ -179,7 +186,7 @@ function EmployeeDashboard() {
 
   const updateBookingStatus = async (bookingId, status) => {
     try {
-      await axios.put(`${API_URL}/bookings/${bookingId}`, { status });
+      await authAxios.put(`/bookings/${bookingId}`, { status });
       fetchBookings();
       fetchStats();
       alert(`Booking ${status === 'confirmed' ? 'approved' : status}! Confirmation email sent to customer.`);
@@ -188,7 +195,6 @@ function EmployeeDashboard() {
     }
   };
 
-  // Open room assignment modal when approving a booking
   const openRoomAssignModal = async (booking) => {
     setRoomAssignModal({
       show: true,
@@ -199,7 +205,7 @@ function EmployeeDashboard() {
     });
 
     try {
-      const response = await axios.get(`${API_URL}/bookings/${booking.id}/available-rooms`);
+      const response = await authAxios.get(`/bookings/${booking.id}/available-rooms`);
       setRoomAssignModal(prev => ({
         ...prev,
         availableRooms: response.data,
@@ -211,11 +217,10 @@ function EmployeeDashboard() {
     }
   };
 
-  // Approve booking with selected room
   const approveWithRoom = async () => {
     const { booking, selectedRoomId } = roomAssignModal;
     try {
-      await axios.put(`${API_URL}/bookings/${booking.id}`, {
+      await authAxios.put(`/bookings/${booking.id}`, {
         status: 'confirmed',
         room_id: selectedRoomId
       });
@@ -236,10 +241,10 @@ function EmployeeDashboard() {
     e.preventDefault();
     try {
       if (editingRoom) {
-        await axios.put(`${API_URL}/rooms/${editingRoom.id}`, roomForm);
+        await authAxios.put(`/rooms/${editingRoom.id}`, roomForm);
         alert('Room updated successfully!');
       } else {
-        await axios.post(`${API_URL}/rooms`, roomForm);
+        await authAxios.post('/rooms', roomForm);
         alert('Room added successfully!');
       }
       resetRoomForm();
@@ -271,7 +276,7 @@ function EmployeeDashboard() {
   const handleMaintenanceSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_URL}/room-maintenance`, maintenanceForm);
+      await authAxios.post('/room-maintenance', maintenanceForm);
       alert('Maintenance record created!');
       setMaintenanceForm({ room_id: '', start_date: '', end_date: '', reason: '' });
       fetchMaintenanceRecords();
@@ -283,7 +288,7 @@ function EmployeeDashboard() {
 
   const completeMaintenanceRecord = async (maintenanceId) => {
     try {
-      await axios.put(`${API_URL}/room-maintenance/${maintenanceId}`, {
+      await authAxios.put(`/room-maintenance/${maintenanceId}`, {
         end_date: new Date().toISOString().split('T')[0],
         status: 'completed'
       });
@@ -297,7 +302,7 @@ function EmployeeDashboard() {
 
   const updateAgentStatus = async (agentId, status) => {
     try {
-      await axios.put(`${API_URL}/agents/${agentId}`, { status });
+      await authAxios.put(`/agents/${agentId}`, { status });
       alert(`Agent ${status}!`);
       fetchAgents();
     } catch (error) {
@@ -308,7 +313,7 @@ function EmployeeDashboard() {
   const handleAgentSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_URL}/agents`, agentForm);
+      await authAxios.post('/agents', agentForm);
       alert('Agent added successfully! Awaiting approval.');
       setShowAgentForm(false);
       setAgentForm({ name: '', email: '', phone: '', company: '' });
@@ -377,6 +382,7 @@ function EmployeeDashboard() {
           <div className="dropdown-content">
             <button onClick={() => handleTabClick('agents', 'list')}>Agent List</button>
             <button onClick={() => handleTabClick('agents', 'maintenance')}>Agent Maintenance</button>
+            <button onClick={() => handleTabClick('agents', 'transactions')}>Agent Transactions</button>
           </div>
         </div>
 
@@ -386,6 +392,20 @@ function EmployeeDashboard() {
         >
           Room History
         </button>
+
+        {userIsAdmin && (
+          <div className="dropdown-tab">
+            <button className={`tab ${activeTab === 'admin' ? 'active' : ''}`}>
+              Admin ▼
+            </button>
+            <div className="dropdown-content">
+              <button onClick={() => handleTabClick('admin', 'categories')}>Room Categories</button>
+              <button onClick={() => handleTabClick('admin', 'holidays')}>Holidays</button>
+              <button onClick={() => handleTabClick('admin', 'rates')}>Rate Rules</button>
+              <button onClick={() => handleTabClick('admin', 'users')}>User Management</button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="tab-content">
@@ -923,6 +943,11 @@ function EmployeeDashboard() {
           </div>
         )}
 
+        {/* AGENT TRANSACTIONS TAB */}
+        {activeTab === 'agents' && activeSubMenu === 'transactions' && (
+          <AgentTransactionsTab />
+        )}
+
         {/* ROOM HISTORY TAB */}
         {activeTab === 'history' && (
           <div>
@@ -1044,6 +1069,12 @@ function EmployeeDashboard() {
             </div>
           </div>
         )}
+
+        {/* ADMIN TABS */}
+        {activeTab === 'admin' && activeSubMenu === 'categories' && <CategoryManagementTab />}
+        {activeTab === 'admin' && activeSubMenu === 'holidays' && <HolidayManagementTab />}
+        {activeTab === 'admin' && activeSubMenu === 'rates' && <RateManagementTab />}
+        {activeTab === 'admin' && activeSubMenu === 'users' && <UserManagementTab />}
       </div>
 
       {/* Room Assignment Modal */}

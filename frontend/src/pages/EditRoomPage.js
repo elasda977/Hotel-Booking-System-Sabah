@@ -23,6 +23,8 @@ function EditRoomPage() {
     maintenance_status: 'operational'
   });
 
+  const [categories, setCategories] = useState([]);
+
   const [maintenanceForm, setMaintenanceForm] = useState({
     room_id: roomId,
     start_date: '',
@@ -32,7 +34,17 @@ function EditRoomPage() {
   useEffect(() => {
     fetchRoom();
     fetchMaintenanceRecords();
+    fetchCategories();
   }, [roomId]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/categories`);
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   const fetchRoom = async () => {
     try {
@@ -154,14 +166,21 @@ function EditRoomPage() {
             </div>
             <div className="form-group">
               <label htmlFor="edit-room-type">Room Type *</label>
-              <input
-                type="text"
+              <select
                 id="edit-room-type"
                 value={roomForm.room_type}
-                onChange={(e) => setRoomForm({...roomForm, room_type: e.target.value})}
+                onChange={(e) => {
+                  const cat = categories.find(c => c.name === e.target.value);
+                  setRoomForm({...roomForm, room_type: e.target.value, category_id: cat ? cat.id : roomForm.category_id});
+                }}
                 required
                 aria-required="true"
-              />
+              >
+                <option value="">Select Room Type</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.name}>{cat.name}</option>
+                ))}
+              </select>
             </div>
             <div className="form-group">
               <label htmlFor="edit-price">Price per Night (RM) *</label>

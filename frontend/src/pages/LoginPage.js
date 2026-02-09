@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { setAuth } from '../utils/auth';
 import './LoginPage.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -9,11 +13,22 @@ function LoginPage() {
     password: ''
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Login functionality will be implemented later
-    setError('Login functionality is not yet activated');
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, formData);
+      setAuth(response.data.token, response.data.user);
+      navigate('/employee');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,8 +69,8 @@ function LoginPage() {
               />
             </div>
 
-            <button type="submit" className="btn-login">
-              Login
+            <button type="submit" className="btn-login" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
 

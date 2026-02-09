@@ -1,0 +1,32 @@
+.rate-management .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding-top: 1.5rem;
+}
+
+.rate-management .checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.rate-management .form-actions-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
