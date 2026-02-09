@@ -351,71 +351,92 @@ function EmployeeDashboard() {
         </div>
       </div>
 
-      <div className="tabs">
+      <div className="tabs" role="tablist" aria-label="Employee portal navigation">
         <button
           className={`tab ${activeTab === 'dashboard' ? 'active' : ''}`}
           onClick={() => handleTabClick('dashboard')}
+          role="tab"
+          aria-selected={activeTab === 'dashboard'}
+          aria-controls="tab-content"
         >
           Dashboard
         </button>
         <button
           className={`tab ${activeTab === 'bookings' ? 'active' : ''}`}
           onClick={() => handleTabClick('bookings')}
+          role="tab"
+          aria-selected={activeTab === 'bookings'}
+          aria-controls="tab-content"
         >
           Bookings
         </button>
 
         <div className="dropdown-tab">
-          <button className={`tab ${activeTab === 'rooms' ? 'active' : ''}`}>
-            Rooms ▼
+          <button
+            className={`tab ${activeTab === 'rooms' ? 'active' : ''}`}
+            aria-haspopup="true"
+            aria-expanded={activeTab === 'rooms'}
+          >
+            Rooms <span aria-hidden="true">▼</span>
           </button>
-          <div className="dropdown-content">
-            <button onClick={() => handleTabClick('rooms', 'status')}>Room Status</button>
-            <button onClick={() => handleTabClick('rooms', 'maintenance')}>Room Maintenance</button>
+          <div className="dropdown-content" role="menu">
+            <button role="menuitem" onClick={() => handleTabClick('rooms', 'status')}>Room Status</button>
+            <button role="menuitem" onClick={() => handleTabClick('rooms', 'maintenance')}>Room Maintenance</button>
           </div>
         </div>
 
         <div className="dropdown-tab">
-          <button className={`tab ${activeTab === 'agents' ? 'active' : ''}`}>
-            Agents ▼
+          <button
+            className={`tab ${activeTab === 'agents' ? 'active' : ''}`}
+            aria-haspopup="true"
+            aria-expanded={activeTab === 'agents'}
+          >
+            Agents <span aria-hidden="true">▼</span>
           </button>
-          <div className="dropdown-content">
-            <button onClick={() => handleTabClick('agents', 'list')}>Agent List</button>
-            <button onClick={() => handleTabClick('agents', 'maintenance')}>Agent Maintenance</button>
-            <button onClick={() => handleTabClick('agents', 'transactions')}>Agent Transactions</button>
+          <div className="dropdown-content" role="menu">
+            <button role="menuitem" onClick={() => handleTabClick('agents', 'list')}>Agent List</button>
+            <button role="menuitem" onClick={() => handleTabClick('agents', 'maintenance')}>Agent Maintenance</button>
+            <button role="menuitem" onClick={() => handleTabClick('agents', 'transactions')}>Agent Transactions</button>
           </div>
         </div>
 
         <button
           className={`tab ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => handleTabClick('history')}
+          role="tab"
+          aria-selected={activeTab === 'history'}
+          aria-controls="tab-content"
         >
           Room History
         </button>
 
         {userIsAdmin && (
           <div className="dropdown-tab">
-            <button className={`tab ${activeTab === 'admin' ? 'active' : ''}`}>
-              Admin ▼
+            <button
+              className={`tab ${activeTab === 'admin' ? 'active' : ''}`}
+              aria-haspopup="true"
+              aria-expanded={activeTab === 'admin'}
+            >
+              Admin <span aria-hidden="true">▼</span>
             </button>
-            <div className="dropdown-content">
-              <button onClick={() => handleTabClick('admin', 'categories')}>Room Categories</button>
-              <button onClick={() => handleTabClick('admin', 'holidays')}>Holidays</button>
-              <button onClick={() => handleTabClick('admin', 'rates')}>Rate Rules</button>
-              <button onClick={() => handleTabClick('admin', 'users')}>User Management</button>
+            <div className="dropdown-content" role="menu">
+              <button role="menuitem" onClick={() => handleTabClick('admin', 'categories')}>Room Categories</button>
+              <button role="menuitem" onClick={() => handleTabClick('admin', 'holidays')}>Holidays</button>
+              <button role="menuitem" onClick={() => handleTabClick('admin', 'rates')}>Rate Rules</button>
+              <button role="menuitem" onClick={() => handleTabClick('admin', 'users')}>User Management</button>
             </div>
           </div>
         )}
       </div>
 
-      <div className="tab-content">
+      <div className="tab-content" id="tab-content" role="tabpanel">
         {/* DASHBOARD TAB */}
         {activeTab === 'dashboard' && (
           <div className="dashboard-stats">
             <h2>Dashboard Overview</h2>
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-icon">
+                <div className="stat-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
@@ -427,7 +448,7 @@ function EmployeeDashboard() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon">
+                <div className="stat-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" />
                     <polyline points="12 6 12 12 16 14" />
@@ -440,7 +461,7 @@ function EmployeeDashboard() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon">
+                <div className="stat-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -452,7 +473,7 @@ function EmployeeDashboard() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon">
+                <div className="stat-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -519,7 +540,7 @@ function EmployeeDashboard() {
                       <td>#{booking.id}</td>
                       <td>
                         {booking.customer_name}
-                        {!booking.read_by_employee && <span className="new-badge">NEW</span>}
+                        {!booking.read_by_employee && <span className="new-badge" aria-label="New unread booking">NEW</span>}
                         {booking.agent_name && (
                           <div style={{ fontSize: '0.85em', color: '#666', marginTop: '0.25rem' }}>
                             via {booking.agent_name}
@@ -620,6 +641,10 @@ function EmployeeDashboard() {
                           alt={rs.room.room_type}
                           className="room-thumbnail"
                           onClick={() => openImageModal(rs.room.image_url)}
+                          onKeyDown={(e) => e.key === 'Enter' && openImageModal(rs.room.image_url)}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`View image of ${rs.room.room_type} room ${rs.room.room_number}`}
                         />
                       </td>
                       <td>{rs.room.room_number}</td>

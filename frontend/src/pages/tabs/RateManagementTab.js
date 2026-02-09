@@ -156,7 +156,7 @@ function RateManagementTab() {
       {historyModal.show && (
         <div className="image-modal" onClick={() => setHistoryModal({ show: false, rateId: null, logs: [] })} role="dialog" aria-modal="true" aria-label="Rate rule history">
           <div className="room-assign-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="image-modal-close" onClick={() => setHistoryModal({ show: false, rateId: null, logs: [] })}>&times;</button>
+            <button className="image-modal-close" onClick={() => setHistoryModal({ show: false, rateId: null, logs: [] })} aria-label="Close rate history">&times;</button>
             <h2>Rate Rule History</h2>
             {historyModal.logs.length === 0 ? (
               <p>No history found.</p>

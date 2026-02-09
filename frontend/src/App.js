@@ -24,17 +24,17 @@ function NavBar() {
   };
 
   return (
-    <nav className="navbar">
+    <nav className="navbar" aria-label="Main navigation">
       <div className="nav-container">
-        <Link to="/" className="nav-logo">Hotel Booking System</Link>
-        <div className="nav-menu">
+        <Link to="/" className="nav-logo" aria-label="Hotel Booking System - Home">Hotel Booking System</Link>
+        <div className="nav-menu" role="menubar">
           <Link to="/" className="nav-link">Guest Booking</Link>
           <Link to="/agent-booking" className="nav-link">Agent Booking</Link>
           {authenticated ? (
             <>
               <Link to="/employee" className="nav-link">Employee Portal</Link>
               <span className="nav-user">{user?.name} ({user?.role})</span>
-              <button onClick={handleLogout} className="nav-link nav-logout">Logout</button>
+              <button onClick={handleLogout} className="nav-link nav-logout" aria-label="Logout from account">Logout</button>
             </>
           ) : (
             <Link to="/login" className="nav-link">Login</Link>

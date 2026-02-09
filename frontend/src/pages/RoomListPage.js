@@ -93,44 +93,53 @@ function RoomListPage() {
           <form onSubmit={handleAddRoom} className="room-form">
             <div className="form-grid">
               <div className="form-group">
-                <label>Room Number *</label>
+                <label htmlFor="add-room-number">Room Number *</label>
                 <input
                   type="text"
+                  id="add-room-number"
                   value={roomForm.room_number}
                   onChange={(e) => setRoomForm({...roomForm, room_number: e.target.value})}
                   required
+                  aria-required="true"
                 />
               </div>
               <div className="form-group">
-                <label>Room Type *</label>
+                <label htmlFor="add-room-type">Room Type *</label>
                 <input
                   type="text"
+                  id="add-room-type"
                   value={roomForm.room_type}
                   onChange={(e) => setRoomForm({...roomForm, room_type: e.target.value})}
                   required
+                  aria-required="true"
                 />
               </div>
               <div className="form-group">
-                <label>Price per Night (RM) *</label>
+                <label htmlFor="add-room-price">Price per Night (RM) *</label>
                 <input
                   type="number"
+                  id="add-room-price"
                   value={roomForm.price_per_night}
                   onChange={(e) => setRoomForm({...roomForm, price_per_night: e.target.value})}
                   required
+                  aria-required="true"
                 />
               </div>
               <div className="form-group">
-                <label>Capacity *</label>
+                <label htmlFor="add-room-capacity">Capacity *</label>
                 <input
                   type="number"
+                  id="add-room-capacity"
                   value={roomForm.capacity}
                   onChange={(e) => setRoomForm({...roomForm, capacity: e.target.value})}
                   required
+                  aria-required="true"
                 />
               </div>
               <div className="form-group">
-                <label>Maintenance Status</label>
+                <label htmlFor="add-room-status">Maintenance Status</label>
                 <select
+                  id="add-room-status"
                   value={roomForm.maintenance_status}
                   onChange={(e) => setRoomForm({...roomForm, maintenance_status: e.target.value})}
                 >
@@ -140,26 +149,29 @@ function RoomListPage() {
                 </select>
               </div>
               <div className="form-group full-width">
-                <label>Description</label>
+                <label htmlFor="add-room-desc">Description</label>
                 <textarea
+                  id="add-room-desc"
                   value={roomForm.description}
                   onChange={(e) => setRoomForm({...roomForm, description: e.target.value})}
                   rows="3"
                 />
               </div>
               <div className="form-group full-width">
-                <label>Image URL</label>
+                <label htmlFor="add-room-image">Image URL</label>
                 <input
                   type="text"
+                  id="add-room-image"
                   value={roomForm.image_url}
                   onChange={(e) => setRoomForm({...roomForm, image_url: e.target.value})}
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
               <div className="form-group full-width">
-                <label>Amenities (comma-separated)</label>
+                <label htmlFor="add-room-amenities">Amenities (comma-separated)</label>
                 <input
                   type="text"
+                  id="add-room-amenities"
                   value={roomForm.amenities}
                   onChange={(e) => setRoomForm({...roomForm, amenities: e.target.value})}
                   placeholder="Free WiFi, Air Conditioning, TV"

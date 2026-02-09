@@ -38,7 +38,7 @@ function LoginPage() {
           <h1>Login</h1>
           <p className="subtitle">Enter your credentials to continue</p>
 
-          {error && <div className="alert alert-error">{error}</div>}
+          {error && <div className="alert alert-error" role="alert">{error}</div>}
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -75,7 +75,7 @@ function LoginPage() {
           </form>
 
           <div className="login-footer">
-            <a href="/">Back to Home</a>
+            <a href="/" aria-label="Back to Home page">Back to Home</a>
           </div>
         </div>
       </div>

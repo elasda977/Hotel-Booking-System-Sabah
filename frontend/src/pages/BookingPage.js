@@ -177,9 +177,13 @@ function BookingPage() {
               alt={room.room_type}
               className="booking-room-image clickable"
               onClick={() => openImageModal(room.image_url)}
+              onKeyDown={(e) => e.key === 'Enter' && openImageModal(room.image_url)}
               onError={(e) => {
                 e.target.src = 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800';
               }}
+              role="button"
+              tabIndex={0}
+              aria-label={`View larger image of ${room.room_type}`}
             />
           )}
           <h2>{room.room_type}</h2>
@@ -191,13 +195,13 @@ function BookingPage() {
           {room.amenities && (
             <div className="booking-amenities">
               <h4>Room Amenities</h4>
-              <div className="amenities-list">
+              <ul className="amenities-list" aria-label="Room amenities">
                 {room.amenities.split(',').map((amenity, index) => (
-                  <span key={index} className="amenity-item">
-                    ✓ {amenity.trim()}
-                  </span>
+                  <li key={index} className="amenity-item">
+                    <span aria-hidden="true">✓</span> {amenity.trim()}
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           )}
 
@@ -234,7 +238,7 @@ function BookingPage() {
             </div>
           )}
 
-          {error && <div className="alert alert-error">{error}</div>}
+          {error && <div className="alert alert-error" role="alert">{error}</div>}
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">

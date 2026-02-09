@@ -44,8 +44,8 @@ function ConfirmationPage() {
   return (
     <div className="container">
       <div className="confirmation-container">
-        <div className="success-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div className="success-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" role="img" aria-label="Booking confirmed">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
@@ -59,52 +59,54 @@ function ConfirmationPage() {
         <div className="booking-details-card">
           <h2>Booking Details</h2>
 
-          <div className="detail-row">
-            <span className="detail-label">Booking ID:</span>
-            <span className="detail-value">#{booking.id}</span>
-          </div>
+          <dl className="detail-list">
+            <div className="detail-row">
+              <dt className="detail-label">Booking ID:</dt>
+              <dd className="detail-value">#{booking.id}</dd>
+            </div>
 
-          <div className="detail-row">
-            <span className="detail-label">Room:</span>
-            <span className="detail-value">{booking.room_type} - Room {booking.room_number}</span>
-          </div>
+            <div className="detail-row">
+              <dt className="detail-label">Room:</dt>
+              <dd className="detail-value">{booking.room_type} - Room {booking.room_number}</dd>
+            </div>
 
-          <div className="detail-row">
-            <span className="detail-label">Guest Name:</span>
-            <span className="detail-value">{booking.customer_name}</span>
-          </div>
+            <div className="detail-row">
+              <dt className="detail-label">Guest Name:</dt>
+              <dd className="detail-value">{booking.customer_name}</dd>
+            </div>
 
-          <div className="detail-row">
-            <span className="detail-label">Email:</span>
-            <span className="detail-value">{booking.customer_email}</span>
-          </div>
+            <div className="detail-row">
+              <dt className="detail-label">Email:</dt>
+              <dd className="detail-value">{booking.customer_email}</dd>
+            </div>
 
-          <div className="detail-row">
-            <span className="detail-label">Phone:</span>
-            <span className="detail-value">{booking.customer_phone}</span>
-          </div>
+            <div className="detail-row">
+              <dt className="detail-label">Phone:</dt>
+              <dd className="detail-value">{booking.customer_phone}</dd>
+            </div>
 
-          <div className="detail-row">
-            <span className="detail-label">Check-in:</span>
-            <span className="detail-value">{new Date(booking.check_in).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
-          </div>
+            <div className="detail-row">
+              <dt className="detail-label">Check-in:</dt>
+              <dd className="detail-value">{new Date(booking.check_in).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric' })}</dd>
+            </div>
 
-          <div className="detail-row">
-            <span className="detail-label">Check-out:</span>
-            <span className="detail-value">{new Date(booking.check_out).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
-          </div>
+            <div className="detail-row">
+              <dt className="detail-label">Check-out:</dt>
+              <dd className="detail-value">{new Date(booking.check_out).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric' })}</dd>
+            </div>
 
-          <div className="detail-row total-row">
-            <span className="detail-label">Total Price:</span>
-            <span className="detail-value total-price">RM{booking.total_price}</span>
-          </div>
+            <div className="detail-row total-row">
+              <dt className="detail-label">Total Price:</dt>
+              <dd className="detail-value total-price">RM{booking.total_price}</dd>
+            </div>
 
-          <div className="detail-row">
-            <span className="detail-label">Status:</span>
-            <span className={`status-badge status-${booking.status}`}>
-              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-            </span>
-          </div>
+            <div className="detail-row">
+              <dt className="detail-label">Status:</dt>
+              <dd className={`status-badge status-${booking.status}`}>
+                {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+              </dd>
+            </div>
+          </dl>
         </div>
 
         <div className="action-buttons">

@@ -317,13 +317,17 @@ function HomePage() {
                   alt={`${roomGroup.room_type} - ${roomGroup.description}`}
                   className="room-image"
                   onClick={() => openImageModal(roomGroup.image_url)}
+                  onKeyDown={(e) => e.key === 'Enter' && openImageModal(roomGroup.image_url)}
                   onError={(e) => {
                     e.target.src = 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800';
                   }}
                   loading="lazy"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View larger image of ${roomGroup.room_type}`}
                 />
-                <div className="room-badge">{roomGroup.capacity} Guests</div>
-                <div className="room-count-badge">{roomGroup.rooms.length} Rooms Available</div>
+                <span className="room-badge" aria-label={`Capacity: ${roomGroup.capacity} guests`}>{roomGroup.capacity} Guests</span>
+                <span className="room-count-badge" aria-label={`${roomGroup.rooms.length} rooms available`}>{roomGroup.rooms.length} Rooms Available</span>
               </div>
 
               <div className="room-content">

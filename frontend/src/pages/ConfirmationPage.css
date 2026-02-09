@@ -47,11 +47,22 @@
   text-align: center;
 }
 
+.detail-list {
+  margin: 0;
+  padding: 0;
+}
+
 .detail-row {
   display: flex;
   justify-content: space-between;
   padding: 1rem 0;
   border-bottom: 1px solid #eee;
+}
+
+.detail-row dt,
+.detail-row dd {
+  margin: 0;
+  padding: 0;
 }
 
 .detail-row:last-child {

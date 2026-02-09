@@ -294,10 +294,10 @@ function AgentBookingPage() {
             </button>
           </div>
 
-          <div className="booking-note">
+          <aside className="booking-note" role="note">
             <strong>Note:</strong> After creating the booking, you will be redirected to upload the payment receipt.
             The booking will be pending approval until the receipt is verified by hotel staff.
-          </div>
+          </aside>
         </form>
       </div>
     </div>

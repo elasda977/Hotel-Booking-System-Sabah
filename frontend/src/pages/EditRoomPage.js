@@ -141,7 +141,7 @@ function EditRoomPage() {
       <div className="page-header">
         <div>
           <button className="btn-back" onClick={() => navigate('/employee/rooms')}>
-            ← Back to Room List
+            <span aria-hidden="true">←</span> Back to Room List
           </button>
           <h1>Edit Room {room.room_number}</h1>
           <p className="subtitle">{room.room_type}</p>
