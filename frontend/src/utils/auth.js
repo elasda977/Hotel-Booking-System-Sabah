@@ -23,6 +23,18 @@ export const isAdmin = () => {
   const user = getUser();
   return user && user.role === 'admin';
 };
+export const isEmployee = () => {
+  const user = getUser();
+  return user && (user.role === 'admin' || user.role === 'employee');
+};
+export const isCustomer = () => {
+  const user = getUser();
+  return user && user.role === 'customer';
+};
+export const isAgent = () => {
+  const user = getUser();
+  return user && user.role === 'agent';
+};
 
 // Axios instance with auth interceptor
 const authAxios = axios.create({ baseURL: API_URL });

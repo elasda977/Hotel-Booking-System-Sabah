@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useToast } from '../components/Toast/ToastContext';
 import './EditRoomPage.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -8,6 +9,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 function EditRoomPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [maintenanceRecords, setMaintenanceRecords] = useState([]);
@@ -75,10 +77,10 @@ function EditRoomPage() {
     e.preventDefault();
     try {
       await axios.put(`${API_URL}/rooms/${roomId}`, roomForm);
-      alert('Room updated successfully!');
+      toast.success('Room updated successfully!');
       fetchRoom();
     } catch (error) {
-      alert(error.response?.data?.error || 'Failed to update room');
+      toast.error(error.response?.data?.error || 'Failed to update room');
     }
   };
 
@@ -86,7 +88,7 @@ function EditRoomPage() {
     e.preventDefault();
     try {
       await axios.post(`${API_URL}/room-maintenance`, maintenanceForm);
-      alert('Maintenance record created!');
+      toast.success('Maintenance record created!');
       setMaintenanceForm({
         room_id: roomId,
         start_date: '',
@@ -95,7 +97,7 @@ function EditRoomPage() {
       fetchMaintenanceRecords();
       fetchRoom(); // Refresh room status
     } catch (error) {
-      alert('Failed to create maintenance record');
+      toast.error('Failed to create maintenance record');
     }
   };
 
@@ -105,11 +107,11 @@ function EditRoomPage() {
         end_date: new Date().toISOString().split('T')[0],
         status: 'completed'
       });
-      alert('Maintenance completed!');
+      toast.success('Maintenance completed!');
       fetchMaintenanceRecords();
       fetchRoom();
     } catch (error) {
-      alert('Failed to complete maintenance');
+      toast.error('Failed to complete maintenance');
     }
   };
 

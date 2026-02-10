@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { getUser, getToken } from '../utils/auth';
 import './BookingPage.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -17,9 +18,11 @@ function BookingPage() {
   const urlCheckOut = searchParams.get('checkOut');
   const urlGuests = searchParams.get('guests');
 
+  const currentUser = getUser();
+
   const [formData, setFormData] = useState({
-    customer_name: '',
-    customer_email: '',
+    customer_name: currentUser?.role === 'customer' ? currentUser.name : '',
+    customer_email: currentUser?.role === 'customer' ? currentUser.email : '',
     customer_phone: '',
     check_in: urlCheckIn || '',
     check_out: urlCheckOut || ''
@@ -155,7 +158,12 @@ function BookingPage() {
         bookingData.room_id = parseInt(roomId);
       }
 
-      const response = await axios.post(`${API_URL}/bookings`, bookingData);
+      const headers = {};
+      const token = getToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const response = await axios.post(`${API_URL}/bookings`, bookingData, { headers });
       navigate(`/confirmation/${response.data.id}`);
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to create booking');

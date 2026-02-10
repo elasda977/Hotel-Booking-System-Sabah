@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useToast } from '../components/Toast/ToastContext';
 import './RoomListPage.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 function RoomListPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -40,7 +42,7 @@ function RoomListPage() {
     e.preventDefault();
     try {
       await axios.post(`${API_URL}/rooms`, roomForm);
-      alert('Room added successfully!');
+      toast.success('Room added successfully!');
       setShowAddForm(false);
       setRoomForm({
         room_number: '',
@@ -54,7 +56,7 @@ function RoomListPage() {
       });
       fetchRooms();
     } catch (error) {
-      alert(error.response?.data?.error || 'Failed to add room');
+      toast.error(error.response?.data?.error || 'Failed to add room');
     }
   };
 
@@ -183,55 +185,57 @@ function RoomListPage() {
         </div>
       )}
 
-      <div className="rooms-list">
-        <table className="rooms-table">
-          <thead>
-            <tr>
-              <th>Photo</th>
-              <th>Room Number</th>
-              <th>Room Type</th>
-              <th>Capacity</th>
-              <th>Price/Night</th>
-              <th>Status</th>
-              <th>Amenities</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rooms.map(room => (
-              <tr key={room.id}>
-                <td>
-                  <img src={room.image_url} alt={room.room_type} className="room-thumbnail" />
-                </td>
-                <td className="room-number-cell">{room.room_number}</td>
-                <td>{room.room_type}</td>
-                <td>{room.capacity} guests</td>
-                <td>RM{room.price_per_night}</td>
-                <td>
-                  <span className={`status-badge status-${
-                    room.maintenance_status === 'operational' ? 'available' :
-                    room.maintenance_status === 'maintenance' ? 'maintenance' : 'occupied'
-                  }`}>
-                    {room.maintenance_status}
-                  </span>
-                </td>
-                <td className="amenities-cell">
-                  {room.amenities ? room.amenities.split(',').slice(0, 2).join(', ') : '-'}
-                  {room.amenities && room.amenities.split(',').length > 2 && '...'}
-                </td>
-                <td>
-                  <button
-                    className="btn-edit"
-                    onClick={() => handleEditRoom(room.id)}
-                  >
-                    Edit Room & Maintenance
-                  </button>
-                </td>
+      {!showAddForm && (
+        <div className="rooms-list">
+          <table className="rooms-table">
+            <thead>
+              <tr>
+                <th>Photo</th>
+                <th>Room Number</th>
+                <th>Room Type</th>
+                <th>Capacity</th>
+                <th>Price/Night</th>
+                <th>Status</th>
+                <th>Amenities</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {rooms.map(room => (
+                <tr key={room.id}>
+                  <td>
+                    <img src={room.image_url} alt={room.room_type} className="room-thumbnail" />
+                  </td>
+                  <td className="room-number-cell">{room.room_number}</td>
+                  <td>{room.room_type}</td>
+                  <td>{room.capacity} guests</td>
+                  <td>RM{room.price_per_night}</td>
+                  <td>
+                    <span className={`status-badge status-${
+                      room.maintenance_status === 'operational' ? 'available' :
+                      room.maintenance_status === 'maintenance' ? 'maintenance' : 'occupied'
+                    }`}>
+                      {room.maintenance_status}
+                    </span>
+                  </td>
+                  <td className="amenities-cell">
+                    {room.amenities ? room.amenities.split(',').slice(0, 2).join(', ') : '-'}
+                    {room.amenities && room.amenities.split(',').length > 2 && '...'}
+                  </td>
+                  <td>
+                    <button
+                      className="btn-edit"
+                      onClick={() => handleEditRoom(room.id)}
+                    >
+                      Edit Room & Maintenance
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {rooms.length === 0 && (
         <div className="no-rooms">

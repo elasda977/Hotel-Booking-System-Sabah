@@ -15,10 +15,11 @@
   display: flex;
   gap: 1rem;
   margin-top: 1rem;
+  justify-content: flex-end;
 }
 
 .btn-secondary {
-  background-color: #6c757d;
+  background-color: #787F85;
   color: white;
   border: none;
   padding: 0.3rem 0.6rem;
@@ -28,5 +29,5 @@
 }
 
 .btn-secondary:hover {
-  background-color: #5a6268;
+  background-color: #2B2E33;
 }

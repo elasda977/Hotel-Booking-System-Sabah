@@ -55,6 +55,7 @@ class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('agent.id'), nullable=True)  # null if direct customer booking
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # linked registered customer
     customer_name = db.Column(db.String(100), nullable=False)
     customer_email = db.Column(db.String(100), nullable=False)
     customer_phone = db.Column(db.String(20), nullable=False)
@@ -65,6 +66,7 @@ class Booking(db.Model):
     receipt_url = db.Column(db.String(500), nullable=True)  # path to uploaded receipt
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     read_by_employee = db.Column(db.Boolean, default=False)
+    booking_group = db.Column(db.String(36), nullable=True)
 
     def to_dict(self):
         agent_name = None
@@ -88,9 +90,11 @@ class Booking(db.Model):
             'receipt_url': self.receipt_url,
             'agent_id': self.agent_id,
             'agent_name': agent_name,
+            'user_id': self.user_id,
             'booking_type': 'Agent' if self.agent_id else 'Guest',
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            'read_by_employee': self.read_by_employee
+            'read_by_employee': self.read_by_employee,
+            'booking_group': self.booking_group
         }
 
 class Agent(db.Model):
@@ -99,9 +103,18 @@ class Agent(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(20), nullable=False)
     company = db.Column(db.String(100))
+    password_hash = db.Column(db.String(256), nullable=True)
     status = db.Column(db.String(20), default='pending')  # pending, approved, suspended
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     bookings = db.relationship('Booking', backref='agent', lazy=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, password)
 
     def to_dict(self):
         return {
@@ -148,7 +161,7 @@ class User(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), default='employee')  # admin, employee
+    role = db.Column(db.String(20), default='employee')  # admin, employee, customer
     status = db.Column(db.String(20), default='active')  # active, inactive
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

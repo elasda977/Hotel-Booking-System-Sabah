@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from models import db, Room, Booking, Agent, RoomMaintenance, RoomCategory, User, Holiday, RateRule, RateAuditLog
 from datetime import datetime, timedelta
+import uuid
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -201,13 +202,64 @@ def calculate_booking_price(room_price, room_type, check_in, check_out):
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.json
-    user = User.query.filter_by(email=data.get('email')).first()
+    email = data.get('email')
+    password = data.get('password', '')
 
-    if not user or not user.check_password(data.get('password', '')):
-        return jsonify({'error': 'Invalid email or password'}), 401
+    # Try User table first (admin, employee, customer)
+    user = User.query.filter_by(email=email).first()
+    if user and user.check_password(password):
+        if user.status != 'active':
+            return jsonify({'error': 'Account is inactive'}), 401
 
-    if user.status != 'active':
-        return jsonify({'error': 'Account is inactive'}), 401
+        token = jwt.encode({
+            'user_id': user.id,
+            'role': user.role,
+            'exp': datetime.utcnow() + timedelta(hours=24)
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+
+        return jsonify({
+            'token': token,
+            'user': user.to_dict()
+        })
+
+    # Try Agent table
+    agent = Agent.query.filter_by(email=email).first()
+    if agent and agent.check_password(password):
+        if agent.status != 'approved':
+            return jsonify({'error': 'Agent account is not approved yet'}), 401
+
+        token = jwt.encode({
+            'agent_id': agent.id,
+            'role': 'agent',
+            'exp': datetime.utcnow() + timedelta(hours=24)
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+
+        return jsonify({
+            'token': token,
+            'user': {**agent.to_dict(), 'role': 'agent'}
+        })
+
+    return jsonify({'error': 'Invalid email or password'}), 401
+
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    data = request.json
+
+    if not data.get('name') or not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'Name, email and password are required'}), 400
+
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({'error': 'Email already registered'}), 400
+
+    user = User(
+        name=data['name'],
+        email=data['email'],
+        role='customer',
+        status='active'
+    )
+    user.set_password(data['password'])
+    db.session.add(user)
+    db.session.commit()
 
     token = jwt.encode({
         'user_id': user.id,
@@ -218,12 +270,34 @@ def login():
     return jsonify({
         'token': token,
         'user': user.to_dict()
-    })
+    }), 201
 
 @app.route('/api/auth/me', methods=['GET'])
 @require_auth()
 def get_current_user():
     return jsonify(request.current_user.to_dict())
+
+@app.route('/api/auth/agent-login', methods=['POST'])
+def agent_login():
+    data = request.json
+    agent = Agent.query.filter_by(email=data.get('email')).first()
+
+    if not agent or not agent.check_password(data.get('password', '')):
+        return jsonify({'error': 'Invalid email or password'}), 401
+
+    if agent.status != 'approved':
+        return jsonify({'error': 'Agent account is not approved'}), 401
+
+    token = jwt.encode({
+        'agent_id': agent.id,
+        'role': 'agent',
+        'exp': datetime.utcnow() + timedelta(hours=24)
+    }, app.config['SECRET_KEY'], algorithm='HS256')
+
+    return jsonify({
+        'token': token,
+        'user': {**agent.to_dict(), 'role': 'agent'}
+    })
 
 @app.route('/api/auth/change-password', methods=['POST'])
 @require_auth()
@@ -577,6 +651,96 @@ def get_available_rooms():
 
     return jsonify([room.to_dict() for room in available_rooms])
 
+@app.route('/api/rooms/category-availability', methods=['GET'])
+def get_category_availability():
+    """Return available room count per category for given dates, plus booked date ranges."""
+    check_in_str = request.args.get('check_in')
+    check_out_str = request.args.get('check_out')
+
+    categories = RoomCategory.query.all()
+
+    if not check_in_str or not check_out_str:
+        result = []
+        for cat in categories:
+            total = Room.query.filter_by(room_type=cat.name).filter(
+                Room.maintenance_status == 'operational'
+            ).count()
+            result.append({
+                'category': cat.name,
+                'total_rooms': total,
+                'available_rooms': total,
+                'booked_dates': []
+            })
+        return jsonify(result)
+
+    try:
+        check_in = datetime.strptime(check_in_str, '%Y-%m-%d').date()
+        check_out = datetime.strptime(check_out_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    result = []
+    for cat in categories:
+        rooms_of_type = Room.query.filter_by(room_type=cat.name).filter(
+            Room.maintenance_status == 'operational'
+        ).all()
+
+        available_count = 0
+        all_booked_ranges = []
+
+        for room in rooms_of_type:
+            conflicting = Booking.query.filter(
+                Booking.room_id == room.id,
+                Booking.status != 'cancelled',
+                Booking.check_in < check_out,
+                Booking.check_out > check_in
+            ).first()
+
+            if not conflicting:
+                available_count += 1
+
+            # Collect all booked date ranges for this category (next 90 days)
+            bookings = Booking.query.filter(
+                Booking.room_id == room.id,
+                Booking.status != 'cancelled',
+                Booking.check_out > datetime.now().date()
+            ).all()
+            for b in bookings:
+                all_booked_ranges.append({
+                    'room_id': room.id,
+                    'room_number': room.room_number,
+                    'check_in': b.check_in.isoformat(),
+                    'check_out': b.check_out.isoformat()
+                })
+
+        # Compute dates where ALL rooms are booked (fully unavailable)
+        fully_booked_dates = []
+        scan_start = datetime.now().date()
+        scan_end = scan_start + timedelta(days=90)
+        current = scan_start
+        while current < scan_end:
+            booked_count = 0
+            for room in rooms_of_type:
+                is_booked = any(
+                    datetime.strptime(br['check_in'], '%Y-%m-%d').date() <= current < datetime.strptime(br['check_out'], '%Y-%m-%d').date()
+                    for br in all_booked_ranges if br['room_id'] == room.id
+                )
+                if is_booked:
+                    booked_count += 1
+            if booked_count >= len(rooms_of_type) and len(rooms_of_type) > 0:
+                fully_booked_dates.append(current.isoformat())
+            current += timedelta(days=1)
+
+        result.append({
+            'category': cat.name,
+            'total_rooms': len(rooms_of_type),
+            'available_rooms': available_count,
+            'fully_booked_dates': fully_booked_dates,
+            'booked_ranges': all_booked_ranges
+        })
+
+    return jsonify(result)
+
 @app.route('/api/rooms/<int:room_id>/availability', methods=['POST'])
 def check_availability(room_id):
     data = request.json
@@ -693,6 +857,18 @@ def create_booking():
     # Use server-calculated price, fall back to client price if calculation returns 0
     final_price = total if total > 0 else data.get('total_price', 0)
 
+    # Try to link booking to logged-in customer
+    linked_user_id = data.get('user_id')
+    if not linked_user_id:
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            try:
+                token_data = jwt.decode(auth_header.split(' ')[1], app.config['SECRET_KEY'], algorithms=['HS256'])
+                if 'user_id' in token_data:
+                    linked_user_id = token_data['user_id']
+            except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+                pass
+
     booking = Booking(
         room_id=room_id,
         customer_name=data['customer_name'],
@@ -702,7 +878,8 @@ def create_booking():
         check_out=check_out,
         total_price=final_price,
         status='pending',
-        agent_id=data.get('agent_id')
+        agent_id=data.get('agent_id'),
+        user_id=linked_user_id
     )
 
     db.session.add(booking)
@@ -712,11 +889,175 @@ def create_booking():
 
     return jsonify(booking.to_dict()), 201
 
+@app.route('/api/bookings/multi', methods=['POST'])
+def create_multi_booking():
+    data = request.json
+
+    rooms_requested = data.get('rooms', [])
+    if not rooms_requested:
+        return jsonify({'error': 'No rooms selected'}), 400
+
+    # Global fallback dates
+    global_check_in_str = data.get('check_in')
+    global_check_out_str = data.get('check_out')
+
+    booking_group_id = str(uuid.uuid4())
+    created_bookings = []
+    total_group_price = 0
+
+    for item in rooms_requested:
+        room_type = item['room_type']
+        quantity = int(item['quantity'])
+
+        # Per-room dates override global dates
+        item_check_in_str = item.get('check_in') or global_check_in_str
+        item_check_out_str = item.get('check_out') or global_check_out_str
+
+        if not item_check_in_str or not item_check_out_str:
+            return jsonify({'error': f'Missing dates for {room_type}'}), 400
+
+        check_in = datetime.strptime(item_check_in_str, '%Y-%m-%d').date()
+        check_out = datetime.strptime(item_check_out_str, '%Y-%m-%d').date()
+
+        if check_in >= check_out:
+            return jsonify({'error': f'Check-out must be after check-in for {room_type}'}), 400
+
+        rooms_of_type = Room.query.filter_by(room_type=room_type).all()
+
+        assigned_rooms = []
+        for room in rooms_of_type:
+            if len(assigned_rooms) >= quantity:
+                break
+
+            if room.maintenance_status in ('maintenance', 'closed'):
+                continue
+
+            conflicting_maintenance = RoomMaintenance.query.filter(
+                RoomMaintenance.room_id == room.id,
+                RoomMaintenance.status == 'ongoing',
+                RoomMaintenance.start_date < check_out,
+                db.or_(
+                    RoomMaintenance.end_date.is_(None),
+                    RoomMaintenance.end_date > check_in
+                )
+            ).first()
+
+            if conflicting_maintenance:
+                continue
+
+            conflicting_bookings = Booking.query.filter(
+                Booking.room_id == room.id,
+                Booking.status != 'cancelled',
+                Booking.check_in < check_out,
+                Booking.check_out > check_in
+            ).first()
+
+            if not conflicting_bookings:
+                # Check not already assigned in this request
+                if room.id not in [r.id for r in assigned_rooms]:
+                    assigned_rooms.append(room)
+
+        if len(assigned_rooms) < quantity:
+            db.session.rollback()
+            return jsonify({'error': f'Only {len(assigned_rooms)} of {quantity} {room_type} rooms available for {item_check_in_str} to {item_check_out_str}'}), 400
+
+        for room in assigned_rooms:
+            total, breakdown, price_error = calculate_booking_price(
+                room.price_per_night, room.room_type, check_in, check_out
+            )
+
+            if price_error:
+                db.session.rollback()
+                return jsonify({'error': price_error}), 400
+
+            booking = Booking(
+                room_id=room.id,
+                customer_name=data['customer_name'],
+                customer_email=data['customer_email'],
+                customer_phone=data['customer_phone'],
+                check_in=check_in,
+                check_out=check_out,
+                total_price=total,
+                status='pending',
+                agent_id=data.get('agent_id'),
+                booking_group=booking_group_id
+            )
+            db.session.add(booking)
+            db.session.flush()
+            created_bookings.append(booking)
+            total_group_price += total
+
+    db.session.commit()
+
+    for b in created_bookings:
+        send_email_notification(b)
+
+    return jsonify({
+        'booking_group': booking_group_id,
+        'bookings': [b.to_dict() for b in created_bookings],
+        'total_price': round(total_group_price, 2),
+        'first_booking_id': created_bookings[0].id if created_bookings else None
+    }), 201
+
 @app.route('/api/bookings', methods=['GET'])
 @require_auth()
 def get_bookings():
     bookings = Booking.query.order_by(Booking.created_at.desc()).all()
     return jsonify([booking.to_dict() for booking in bookings])
+
+@app.route('/api/my-bookings', methods=['GET'])
+@require_auth()
+def get_my_bookings():
+    user = request.current_user
+    if user.role == 'customer':
+        bookings = Booking.query.filter(
+            db.or_(Booking.user_id == user.id, Booking.customer_email == user.email)
+        ).order_by(Booking.created_at.desc()).all()
+    else:
+        bookings = Booking.query.order_by(Booking.created_at.desc()).all()
+    return jsonify([b.to_dict() for b in bookings])
+
+@app.route('/api/agent-bookings', methods=['GET'])
+def get_agent_own_bookings():
+    token = None
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+
+    if not token:
+        return jsonify({'error': 'Authentication required'}), 401
+
+    try:
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        if 'agent_id' not in data:
+            return jsonify({'error': 'Agent authentication required'}), 401
+
+        agent = Agent.query.get(data['agent_id'])
+        if not agent:
+            return jsonify({'error': 'Agent not found'}), 404
+
+        bookings = Booking.query.filter_by(agent_id=agent.id).order_by(Booking.created_at.desc()).all()
+
+        total_revenue = sum(b.total_price for b in bookings if b.status == 'confirmed')
+        confirmed = sum(1 for b in bookings if b.status == 'confirmed')
+        pending = sum(1 for b in bookings if b.status == 'pending')
+        cancelled = sum(1 for b in bookings if b.status == 'cancelled')
+
+        return jsonify({
+            'agent': agent.to_dict(),
+            'bookings': [b.to_dict() for b in bookings],
+            'summary': {
+                'total': len(bookings),
+                'confirmed': confirmed,
+                'pending': pending,
+                'cancelled': cancelled,
+                'revenue': total_revenue
+            }
+        })
+    except jwt.ExpiredSignatureError:
+        return jsonify({'error': 'Token expired'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'error': 'Invalid token'}), 401
 
 @app.route('/api/bookings/<int:booking_id>', methods=['GET'])
 def get_booking(booking_id):
@@ -898,6 +1239,7 @@ def create_agent():
         company=data.get('company', ''),
         status='pending'
     )
+    agent.set_password(data.get('password') or 'agent123')
 
     db.session.add(agent)
     db.session.commit()
@@ -1164,8 +1506,19 @@ def init_db():
             )
             admin.set_password('admin123')
             db.session.add(admin)
+
+            admin2 = User(
+                name='Admin',
+                email='admin@admin.com',
+                role='admin',
+                status='active'
+            )
+            admin2.set_password('admin')
+            db.session.add(admin2)
+
             db.session.commit()
             print("Default admin user created: admin@hotel.com / admin123")
+            print("Default admin user created: admin@admin.com / admin")
 
         # Seed default categories
         if RoomCategory.query.count() == 0:
@@ -1179,6 +1532,20 @@ def init_db():
                 db.session.add(cat)
             db.session.commit()
             print("Default room categories created")
+
+        # Seed default agent
+        if Agent.query.count() == 0:
+            agent = Agent(
+                name='Lee',
+                email='lee@agent.com',
+                phone='0123456789',
+                company='Lee Travel Agency',
+                status='approved'
+            )
+            agent.set_password('password')
+            db.session.add(agent)
+            db.session.commit()
+            print("Default agent created: lee@agent.com / password")
 
         if Room.query.count() == 0:
             # Get category IDs

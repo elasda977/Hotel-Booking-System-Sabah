@@ -12,7 +12,7 @@
 }
 
 .portal-header h1 {
-  color: #2c3e50;
+  color: #2B2E33;
 }
 
 .notification-badge .badge {
@@ -27,7 +27,7 @@
 .tabs {
   display: flex;
   gap: 1rem;
-  border-bottom: 2px solid #ddd;
+  border-bottom: 2px solid #C1C4C8;
   margin-bottom: 2rem;
   flex-wrap: wrap;
   position: sticky;
@@ -44,18 +44,18 @@
   border: none;
   cursor: pointer;
   font-size: 1rem;
-  color: #666;
+  color: #787F85;
   border-bottom: 3px solid transparent;
   transition: all 0.3s;
 }
 
 .tab:hover {
-  color: #2c3e50;
+  color: #2B2E33;
 }
 
 .tab.active {
-  color: #3498db;
-  border-bottom-color: #3498db;
+  color: #3B82F6;
+  border-bottom-color: #3B82F6;
 }
 
 /* Dropdown Tab Styling */
@@ -84,7 +84,7 @@
 }
 
 .dropdown-content button {
-  color: #333;
+  color: #2B2E33;
   padding: 12px 16px;
   text-decoration: none;
   display: block;
@@ -98,8 +98,8 @@
 }
 
 .dropdown-content button:hover {
-  background-color: #f1f1f1;
-  color: #3498db;
+  background-color: #F5F6F7;
+  color: #3B82F6;
 }
 
 .tab-content {
@@ -111,13 +111,13 @@
 
 .tab-content h2 {
   margin-bottom: 1.5rem;
-  color: #2c3e50;
+  color: #2B2E33;
 }
 
 .tab-content h3 {
   margin-top: 2rem;
   margin-bottom: 1rem;
-  color: #2c3e50;
+  color: #2B2E33;
   font-size: 1.3rem;
 }
 
@@ -130,7 +130,7 @@
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2B2E33 0%, #787F85 100%);
   border-radius: 12px;
   padding: 1.5rem;
   color: white;
@@ -181,21 +181,21 @@
 }
 
 .data-table th {
-  background: #f8f9fa;
+  background: #F5F6F7;
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #2c3e50;
-  border-bottom: 2px solid #dee2e6;
+  color: #2B2E33;
+  border-bottom: 2px solid #C1C4C8;
 }
 
 .data-table td {
   padding: 1rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid #C1C4C8;
 }
 
 .data-table tr:hover {
-  background: #f8f9fa;
+  background: #F5F6F7;
 }
 
 .data-table tr.unread {
@@ -306,12 +306,12 @@
 }
 
 .btn-small.btn-info {
-  background: #3498db;
+  background: #3B82F6;
   color: white;
 }
 
 .btn-small.btn-info:hover {
-  background: #2980b9;
+  background: #2563EB;
 }
 
 .btn-small.btn-success {
@@ -332,16 +332,73 @@
   background: #c0392b;
 }
 
+/* Action Dropdown Menu */
+.action-dropdown {
+  position: relative;
+}
+
+.action-dropdown-trigger {
+  background: none;
+  border: 1px solid #C1C4C8;
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #787F85;
+  transition: all 0.2s;
+}
+
+.action-dropdown-trigger:hover {
+  background: #F5F6F7;
+  border-color: #787F85;
+}
+
+.action-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid #C1C4C8;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  z-index: 100;
+  min-width: 120px;
+}
+
+.action-dropdown-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #2B2E33;
+}
+
+.action-dropdown-menu button:hover {
+  background: #F5F6F7;
+}
+
+.action-dropdown-menu button.danger {
+  color: #e74c3c;
+}
+
+.action-dropdown-menu button.danger:hover {
+  background: #fee2e2;
+}
+
 /* Form Styles */
 .form-section {
-  background: #f8f9fa;
+  background: #F5F6F7;
   padding: 2rem;
   border-radius: 8px;
   margin-bottom: 2rem;
 }
 
 .maintenance-section {
-  background: #f8f9fa;
+  background: #F5F6F7;
   padding: 2rem;
   border-radius: 8px;
   margin-bottom: 2rem;
@@ -350,7 +407,7 @@
 .maintenance-section h3 {
   margin-top: 0;
   margin-bottom: 1.5rem;
-  color: #2c3e50;
+  color: #2B2E33;
   font-size: 1.2rem;
 }
 
@@ -375,14 +432,14 @@
 .form-group label {
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: #2c3e50;
+  color: #2B2E33;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid #C1C4C8;
   border-radius: 4px;
   font-size: 1rem;
   transition: border-color 0.2s;
@@ -392,7 +449,7 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: #3B82F6;
 }
 
 .form-group.full-width {
@@ -403,11 +460,19 @@
   display: flex;
   gap: 1rem;
   margin-top: 1rem;
+  justify-content: flex-end;
+}
+
+.form-actions-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
 }
 
 .btn-submit {
   padding: 0.75rem 2rem;
-  background: #3498db;
+  background: #3B82F6;
   color: white;
   border: none;
   border-radius: 4px;
@@ -417,7 +482,7 @@
 }
 
 .btn-submit:hover {
-  background: #2980b9;
+  background: #2563EB;
 }
 
 .btn-cancel {
@@ -438,7 +503,7 @@
 
 /* Filter Section */
 .filter-section {
-  background: #f8f9fa;
+  background: #F5F6F7;
   padding: 1.5rem;
   border-radius: 8px;
   margin-bottom: 2rem;
@@ -458,24 +523,24 @@
 
 .filter-btn {
   padding: 0.75rem 1.5rem;
-  background: #f8f9fa;
-  border: 2px solid #dee2e6;
+  background: #F5F6F7;
+  border: 2px solid #C1C4C8;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  color: #2c3e50;
+  color: #2B2E33;
   transition: all 0.3s;
 }
 
 .filter-btn:hover {
   background: #e9ecef;
-  border-color: #3498db;
+  border-color: #3B82F6;
 }
 
 .filter-btn.active {
-  background: #3498db;
+  background: #3B82F6;
   color: white;
-  border-color: #3498db;
+  border-color: #3B82F6;
 }
 
 /* Image Modal */
@@ -526,7 +591,7 @@
 }
 
 .image-modal-close:hover {
-  background: #f0f0f0;
+  background: #F5F6F7;
 }
 
 /* Responsive Design */
@@ -540,12 +605,12 @@
   }
 
   .tab {
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #C1C4C8;
   }
 
   .tab.active {
-    border-left: 3px solid #3498db;
-    border-bottom: 1px solid #ddd;
+    border-left: 3px solid #3B82F6;
+    border-bottom: 1px solid #C1C4C8;
   }
 
   .stats-grid {
@@ -576,7 +641,7 @@
   .dropdown-content {
     position: relative;
     box-shadow: none;
-    border-left: 3px solid #3498db;
+    border-left: 3px solid #3B82F6;
     margin-left: 1rem;
   }
 }
@@ -586,7 +651,7 @@
 .error {
   text-align: center;
   padding: 3rem;
-  color: #666;
+  color: #787F85;
   font-size: 1.1rem;
 }
 
@@ -615,13 +680,13 @@
 .room-assign-modal h2 {
   margin-top: 0;
   margin-bottom: 1.5rem;
-  color: #2c3e50;
-  border-bottom: 2px solid #3498db;
+  color: #2B2E33;
+  border-bottom: 2px solid #3B82F6;
   padding-bottom: 0.5rem;
 }
 
 .booking-summary {
-  background: #f8f9fa;
+  background: #F5F6F7;
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1.5rem;
@@ -629,7 +694,7 @@
 
 .booking-summary p {
   margin: 0.5rem 0;
-  color: #555;
+  color: #787F85;
 }
 
 .room-selection {
@@ -639,7 +704,7 @@
 .room-selection label {
   display: block;
   margin-bottom: 0.75rem;
-  color: #333;
+  color: #2B2E33;
 }
 
 .room-options {
@@ -649,7 +714,7 @@
   max-height: 250px;
   overflow-y: auto;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid #C1C4C8;
   border-radius: 8px;
 }
 
@@ -658,25 +723,25 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 0.75rem;
-  border: 2px solid #e0e0e0;
+  border: 2px solid #C1C4C8;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .room-option:hover {
-  background: #f5f5f5;
-  border-color: #3498db;
+  background: #F5F6F7;
+  border-color: #3B82F6;
 }
 
 .room-option.selected {
-  background: #e8f4fd;
-  border-color: #3498db;
+  background: #eff6ff;
+  border-color: #3B82F6;
 }
 
 .room-option input[type="radio"] {
   margin-top: 4px;
-  accent-color: #3498db;
+  accent-color: #3B82F6;
 }
 
 .room-info {
@@ -684,11 +749,11 @@
 }
 
 .room-info strong {
-  color: #2c3e50;
+  color: #2B2E33;
 }
 
 .room-info small {
-  color: #666;
+  color: #787F85;
   display: block;
   margin-top: 0.25rem;
 }
@@ -709,7 +774,7 @@
   justify-content: flex-end;
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #C1C4C8;
 }
 
 .btn-cancel {
@@ -733,6 +798,6 @@
 }
 
 .modal-actions .btn-submit:disabled {
-  background: #bdc3c7;
+  background: #C1C4C8;
   cursor: not-allowed;
 }

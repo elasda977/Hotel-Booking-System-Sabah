@@ -1,13 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import authAxios from '../../utils/auth';
+import { useToast } from '../../components/Toast/ToastContext';
 import './HolidayManagementTab.css';
 
 function HolidayManagementTab() {
+  const toast = useToast();
   const [holidays, setHolidays] = useState([]);
   const [form, setForm] = useState({ name: '', date: '', rate_multiplier: 1.5, is_blackout: false });
   const [editing, setEditing] = useState(null);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const dropdownRef = useRef(null);
 
   useEffect(() => { fetchHolidays(); }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchHolidays = async () => {
     try {
@@ -22,16 +36,16 @@ function HolidayManagementTab() {
       const payload = { ...form, rate_multiplier: parseFloat(form.rate_multiplier) };
       if (editing) {
         await authAxios.put(`/holidays/${editing.id}`, payload);
-        alert('Holiday updated!');
+        toast.success('Holiday updated!');
       } else {
         await authAxios.post('/holidays', payload);
-        alert('Holiday created!');
+        toast.success('Holiday created!');
       }
       setForm({ name: '', date: '', rate_multiplier: 1.5, is_blackout: false });
       setEditing(null);
       fetchHolidays();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to save holiday');
+      toast.error(err.response?.data?.error || 'Failed to save holiday');
     }
   };
 
@@ -44,10 +58,10 @@ function HolidayManagementTab() {
     if (!window.confirm('Delete this holiday?')) return;
     try {
       await authAxios.delete(`/holidays/${id}`);
-      alert('Holiday deleted!');
+      toast.success('Holiday deleted!');
       fetchHolidays();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to delete holiday');
+      toast.error(err.response?.data?.error || 'Failed to delete holiday');
     }
   };
 
@@ -85,7 +99,7 @@ function HolidayManagementTab() {
         </form>
       </div>
 
-      <div className="table-container">
+      <div className="table-container" ref={dropdownRef}>
         <table className="data-table">
           <thead>
             <tr>
@@ -104,9 +118,14 @@ function HolidayManagementTab() {
                 <td>x{h.rate_multiplier}</td>
                 <td><span className={`status-badge ${h.is_blackout ? 'status-cancelled' : 'status-confirmed'}`}>{h.is_blackout ? 'Yes' : 'No'}</span></td>
                 <td>
-                  <div className="action-buttons">
-                    <button className="btn-small btn-info" onClick={() => handleEdit(h)}>Edit</button>
-                    <button className="btn-small btn-danger" onClick={() => handleDelete(h.id)}>Delete</button>
+                  <div className="action-dropdown">
+                    <button className="action-dropdown-trigger" onClick={() => setOpenDropdown(openDropdown === h.id ? null : h.id)}>&#8942;</button>
+                    {openDropdown === h.id && (
+                      <div className="action-dropdown-menu">
+                        <button onClick={() => { handleEdit(h); setOpenDropdown(null); }}>Edit</button>
+                        <button className="danger" onClick={() => { handleDelete(h.id); setOpenDropdown(null); }}>Delete</button>
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>

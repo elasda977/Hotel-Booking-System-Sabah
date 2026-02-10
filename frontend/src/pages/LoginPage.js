@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { setAuth } from '../utils/auth';
 import './LoginPage.css';
@@ -23,7 +23,16 @@ function LoginPage() {
     try {
       const response = await axios.post(`${API_URL}/auth/login`, formData);
       setAuth(response.data.token, response.data.user);
-      navigate('/employee');
+
+      // Role-based redirect
+      const role = response.data.user.role;
+      if (role === 'customer') {
+        navigate('/my-bookings');
+      } else if (role === 'agent') {
+        navigate('/agent-dashboard');
+      } else {
+        navigate('/employee');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please try again.');
     } finally {
@@ -75,7 +84,8 @@ function LoginPage() {
           </form>
 
           <div className="login-footer">
-            <a href="/" aria-label="Back to Home page">Back to Home</a>
+            <p>Don't have an account? <Link to="/register">Register here</Link></p>
+            <Link to="/" aria-label="Back to Home page">Back to Home</Link>
           </div>
         </div>
       </div>

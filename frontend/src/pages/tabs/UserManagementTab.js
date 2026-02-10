@@ -1,14 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import authAxios from '../../utils/auth';
+import { useToast } from '../../components/Toast/ToastContext';
 import './UserManagementTab.css';
 
 function UserManagementTab() {
+  const toast = useToast();
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'employee', status: 'active' });
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const dropdownRef = useRef(null);
 
   useEffect(() => { fetchUsers(); }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -24,15 +38,15 @@ function UserManagementTab() {
         const payload = { name: form.name, email: form.email, role: form.role, status: form.status };
         if (form.password) payload.password = form.password;
         await authAxios.put(`/users/${editing.id}`, payload);
-        alert('User updated!');
+        toast.success('User updated!');
       } else {
         await authAxios.post('/users', form);
-        alert('User created!');
+        toast.success('User created!');
       }
       resetForm();
       fetchUsers();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to save user');
+      toast.error(err.response?.data?.error || 'Failed to save user');
     }
   };
 
@@ -46,10 +60,10 @@ function UserManagementTab() {
     if (!window.confirm('Delete this user?')) return;
     try {
       await authAxios.delete(`/users/${id}`);
-      alert('User deleted!');
+      toast.success('User deleted!');
       fetchUsers();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to delete user');
+      toast.error(err.response?.data?.error || 'Failed to delete user');
     }
   };
 
@@ -105,7 +119,7 @@ function UserManagementTab() {
         </div>
       )}
 
-      <div className="table-container">
+      <div className="table-container" ref={dropdownRef}>
         <table className="data-table">
           <thead>
             <tr>
@@ -128,9 +142,14 @@ function UserManagementTab() {
                 <td><span className={`status-badge ${user.status === 'active' ? 'status-confirmed' : 'status-cancelled'}`}>{user.status}</span></td>
                 <td>{new Date(user.created_at).toLocaleDateString('en-GB')}</td>
                 <td>
-                  <div className="action-buttons">
-                    <button className="btn-small btn-info" onClick={() => handleEdit(user)}>Edit</button>
-                    <button className="btn-small btn-danger" onClick={() => handleDelete(user.id)}>Delete</button>
+                  <div className="action-dropdown">
+                    <button className="action-dropdown-trigger" onClick={() => setOpenDropdown(openDropdown === user.id ? null : user.id)}>&#8942;</button>
+                    {openDropdown === user.id && (
+                      <div className="action-dropdown-menu">
+                        <button onClick={() => { handleEdit(user); setOpenDropdown(null); }}>Edit</button>
+                        <button className="danger" onClick={() => { handleDelete(user.id); setOpenDropdown(null); }}>Delete</button>
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>

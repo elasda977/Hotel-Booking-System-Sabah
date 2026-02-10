@@ -1,13 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import authAxios from '../../utils/auth';
+import { useToast } from '../../components/Toast/ToastContext';
 import './CategoryManagementTab.css';
 
 function CategoryManagementTab() {
+  const toast = useToast();
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({ name: '', description: '', base_price: '', capacity: '' });
   const [editing, setEditing] = useState(null);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const dropdownRef = useRef(null);
 
   useEffect(() => { fetchCategories(); }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchCategories = async () => {
     try {
@@ -22,16 +36,16 @@ function CategoryManagementTab() {
       const payload = { ...form, base_price: parseFloat(form.base_price), capacity: parseInt(form.capacity) };
       if (editing) {
         await authAxios.put(`/categories/${editing.id}`, payload);
-        alert('Category updated!');
+        toast.success('Category updated!');
       } else {
         await authAxios.post('/categories', payload);
-        alert('Category created!');
+        toast.success('Category created!');
       }
       setForm({ name: '', description: '', base_price: '', capacity: '' });
       setEditing(null);
       fetchCategories();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to save category');
+      toast.error(err.response?.data?.error || 'Failed to save category');
     }
   };
 
@@ -44,10 +58,10 @@ function CategoryManagementTab() {
     if (!window.confirm('Delete this category?')) return;
     try {
       await authAxios.delete(`/categories/${id}`);
-      alert('Category deleted!');
+      toast.success('Category deleted!');
       fetchCategories();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to delete category');
+      toast.error(err.response?.data?.error || 'Failed to delete category');
     }
   };
 
@@ -83,7 +97,7 @@ function CategoryManagementTab() {
         </form>
       </div>
 
-      <div className="table-container">
+      <div className="table-container" ref={dropdownRef}>
         <table className="data-table">
           <thead>
             <tr>
@@ -102,9 +116,14 @@ function CategoryManagementTab() {
                 <td>RM{cat.base_price}</td>
                 <td>{cat.capacity}</td>
                 <td>
-                  <div className="action-buttons">
-                    <button className="btn-small btn-info" onClick={() => handleEdit(cat)}>Edit</button>
-                    <button className="btn-small btn-danger" onClick={() => handleDelete(cat.id)}>Delete</button>
+                  <div className="action-dropdown">
+                    <button className="action-dropdown-trigger" onClick={() => setOpenDropdown(openDropdown === cat.id ? null : cat.id)}>&#8942;</button>
+                    {openDropdown === cat.id && (
+                      <div className="action-dropdown-menu">
+                        <button onClick={() => { handleEdit(cat); setOpenDropdown(null); }}>Edit</button>
+                        <button className="danger" onClick={() => { handleDelete(cat.id); setOpenDropdown(null); }}>Delete</button>
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>

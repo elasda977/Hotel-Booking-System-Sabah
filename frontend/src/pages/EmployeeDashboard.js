@@ -6,12 +6,14 @@ import UserManagementTab from './tabs/UserManagementTab';
 import HolidayManagementTab from './tabs/HolidayManagementTab';
 import RateManagementTab from './tabs/RateManagementTab';
 import AgentTransactionsTab from './tabs/AgentTransactionsTab';
+import { useToast } from '../components/Toast/ToastContext';
 import './EmployeeDashboard.css';
 
 function EmployeeDashboard() {
   const navigate = useNavigate();
   const user = getUser();
   const userIsAdmin = isAdmin();
+  const toast = useToast();
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeSubMenu, setActiveSubMenu] = useState('');
@@ -21,11 +23,13 @@ function EmployeeDashboard() {
   const [agents, setAgents] = useState([]);
   const [maintenanceRecords, setMaintenanceRecords] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [roomHistory, setRoomHistory] = useState({ bookings: [], maintenance: [] });
   const [notifications, setNotifications] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [historyFilter, setHistoryFilter] = useState({ date: '', room_id: '' });
+  const [openActionDropdown, setOpenActionDropdown] = useState(null);
 
   // Room assignment modal state
   const [roomAssignModal, setRoomAssignModal] = useState({
@@ -70,11 +74,22 @@ function EmployeeDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  // Close action dropdown when clicking outside
+  useEffect(() => {
+    if (!openActionDropdown) return;
+    const handleClick = () => setOpenActionDropdown(null);
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [openActionDropdown]);
+
   useEffect(() => {
     if (activeTab === 'bookings') {
       fetchBookings();
     } else if (activeTab === 'rooms' && activeSubMenu === 'status') {
       fetchRoomStatus();
+    } else if (activeTab === 'rooms' && activeSubMenu === 'list') {
+      fetchRooms();
+      fetchCategories();
     } else if (activeTab === 'rooms' && activeSubMenu === 'maintenance') {
       fetchRooms();
       fetchMaintenanceRecords();
@@ -129,6 +144,15 @@ function EmployeeDashboard() {
       setRooms(response.data);
     } catch (error) {
       console.error('Error fetching rooms:', error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await authAxios.get('/categories');
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
 
@@ -189,7 +213,7 @@ function EmployeeDashboard() {
       await authAxios.put(`/bookings/${bookingId}`, { status });
       fetchBookings();
       fetchStats();
-      alert(`Booking ${status === 'confirmed' ? 'approved' : status}! Confirmation email sent to customer.`);
+      toast.success(`Booking ${status === 'confirmed' ? 'approved' : status}! Confirmation email sent to customer.`);
     } catch (error) {
       console.error('Error updating booking:', error);
     }
@@ -227,9 +251,9 @@ function EmployeeDashboard() {
       fetchBookings();
       fetchStats();
       setRoomAssignModal({ show: false, booking: null, availableRooms: [], selectedRoomId: null, loading: false });
-      alert('Booking approved! Confirmation email sent to customer.');
+      toast.success('Booking approved! Confirmation email sent to customer.');
     } catch (error) {
-      alert(error.response?.data?.error || 'Failed to approve booking');
+      toast.error(error.response?.data?.error || 'Failed to approve booking');
     }
   };
 
@@ -242,15 +266,15 @@ function EmployeeDashboard() {
     try {
       if (editingRoom) {
         await authAxios.put(`/rooms/${editingRoom.id}`, roomForm);
-        alert('Room updated successfully!');
+        toast.success('Room updated successfully!');
       } else {
         await authAxios.post('/rooms', roomForm);
-        alert('Room added successfully!');
+        toast.success('Room added successfully!');
       }
       resetRoomForm();
       fetchRooms();
     } catch (error) {
-      alert(error.response?.data?.error || 'Failed to save room');
+      toast.error(error.response?.data?.error || 'Failed to save room');
     }
   };
 
@@ -277,12 +301,12 @@ function EmployeeDashboard() {
     e.preventDefault();
     try {
       await authAxios.post('/room-maintenance', maintenanceForm);
-      alert('Maintenance record created!');
+      toast.success('Maintenance record created!');
       setMaintenanceForm({ room_id: '', start_date: '', end_date: '', reason: '' });
       fetchMaintenanceRecords();
       fetchRooms();
     } catch (error) {
-      alert('Failed to create maintenance record');
+      toast.error('Failed to create maintenance record');
     }
   };
 
@@ -292,21 +316,21 @@ function EmployeeDashboard() {
         end_date: new Date().toISOString().split('T')[0],
         status: 'completed'
       });
-      alert('Maintenance completed!');
+      toast.success('Maintenance completed!');
       fetchMaintenanceRecords();
       fetchRooms();
     } catch (error) {
-      alert('Failed to complete maintenance');
+      toast.error('Failed to complete maintenance');
     }
   };
 
   const updateAgentStatus = async (agentId, status) => {
     try {
       await authAxios.put(`/agents/${agentId}`, { status });
-      alert(`Agent ${status}!`);
+      toast.success(`Agent ${status}!`);
       fetchAgents();
     } catch (error) {
-      alert('Failed to update agent status');
+      toast.error('Failed to update agent status');
     }
   };
 
@@ -314,12 +338,12 @@ function EmployeeDashboard() {
     e.preventDefault();
     try {
       await authAxios.post('/agents', agentForm);
-      alert('Agent added successfully! Awaiting approval.');
+      toast.info('Agent added successfully! Awaiting approval.');
       setShowAgentForm(false);
       setAgentForm({ name: '', email: '', phone: '', company: '' });
       fetchAgents();
     } catch (error) {
-      alert(error.response?.data?.error || 'Failed to add agent');
+      toast.error(error.response?.data?.error || 'Failed to add agent');
     }
   };
 
@@ -381,6 +405,7 @@ function EmployeeDashboard() {
           </button>
           <div className="dropdown-content" role="menu">
             <button role="menuitem" onClick={() => handleTabClick('rooms', 'status')}>Room Status</button>
+            <button role="menuitem" onClick={() => handleTabClick('rooms', 'list')}>Room List</button>
             <button role="menuitem" onClick={() => handleTabClick('rooms', 'maintenance')}>Room Maintenance</button>
           </div>
         </div>
@@ -578,31 +603,35 @@ function EmployeeDashboard() {
                         </span>
                       </td>
                       <td>
-                        <div className="action-buttons">
-                          {!booking.read_by_employee && (
-                            <button
-                              className="btn-small btn-info"
-                              onClick={() => markAsRead(booking.id)}
-                            >
-                              Mark Read
-                            </button>
-                          )}
-                          {booking.status === 'pending' && (
-                            <>
-                              <button
-                                className="btn-small btn-success"
-                                onClick={() => openRoomAssignModal(booking)}
-                                title={!booking.receipt_url ? 'Approve without receipt verification' : 'Approve booking and send confirmation email'}
-                              >
-                                Approve
-                              </button>
-                              <button
-                                className="btn-small btn-danger"
-                                onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                              >
-                                Reject
-                              </button>
-                            </>
+                        <div className="action-dropdown">
+                          <button
+                            className="action-dropdown-trigger"
+                            onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(openActionDropdown === booking.id ? null : booking.id); }}
+                            aria-label="Actions"
+                          >
+                            &#8942;
+                          </button>
+                          {openActionDropdown === booking.id && (
+                            <div className="action-dropdown-menu">
+                              {!booking.read_by_employee && (
+                                <button onClick={() => { markAsRead(booking.id); setOpenActionDropdown(null); }}>
+                                  Mark Read
+                                </button>
+                              )}
+                              {booking.status === 'pending' && (
+                                <>
+                                  <button onClick={() => { openRoomAssignModal(booking); setOpenActionDropdown(null); }}>
+                                    Approve
+                                  </button>
+                                  <button className="danger" onClick={() => { updateBookingStatus(booking.id, 'cancelled'); setOpenActionDropdown(null); }}>
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                              {booking.status !== 'pending' && booking.read_by_employee && (
+                                <button disabled style={{ color: '#999', cursor: 'default' }}>No actions</button>
+                              )}
+                            </div>
                           )}
                         </div>
                       </td>
@@ -685,6 +714,214 @@ function EmployeeDashboard() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* ROOM LIST TAB */}
+        {activeTab === 'rooms' && activeSubMenu === 'list' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0 }}>Room List</h2>
+              <button
+                className={editingRoom !== null ? "btn-small btn-danger" : "btn-small btn-success"}
+                onClick={() => {
+                  if (editingRoom !== null) {
+                    resetRoomForm();
+                  } else {
+                    setEditingRoom('new');
+                    setRoomForm({
+                      room_number: '',
+                      room_type: '',
+                      price_per_night: '',
+                      capacity: '',
+                      description: '',
+                      image_url: '',
+                      amenities: '',
+                      maintenance_status: 'operational'
+                    });
+                  }
+                }}
+                style={{ padding: '0.6rem 1.2rem', fontSize: '1rem' }}
+              >
+                {editingRoom !== null ? 'Cancel' : '+ Add New Room'}
+              </button>
+            </div>
+
+            {editingRoom !== null && (
+              <div className="maintenance-section" style={{ marginBottom: '2rem' }}>
+                <h3>{editingRoom === 'new' ? 'Add New Room' : `Edit Room ${roomForm.room_number}`}</h3>
+                <form onSubmit={handleRoomSubmit} className="maintenance-form">
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label htmlFor="room-number">Room Number *</label>
+                      <input
+                        type="text"
+                        id="room-number"
+                        value={roomForm.room_number}
+                        onChange={(e) => setRoomForm({...roomForm, room_number: e.target.value})}
+                        required
+                        aria-required="true"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="room-type">Room Type *</label>
+                      <select
+                        id="room-type"
+                        value={roomForm.room_type}
+                        onChange={(e) => {
+                          const selected = categories.find(c => c.name === e.target.value);
+                          setRoomForm({
+                            ...roomForm,
+                            room_type: e.target.value,
+                            ...(selected && editingRoom === 'new' ? {
+                              price_per_night: selected.base_price,
+                              capacity: selected.capacity,
+                              category_id: selected.id
+                            } : {})
+                          });
+                        }}
+                        required
+                        aria-required="true"
+                      >
+                        <option value="">-- Select Room Type --</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="room-price">Price per Night (RM) *</label>
+                      <input
+                        type="number"
+                        id="room-price"
+                        value={roomForm.price_per_night}
+                        onChange={(e) => setRoomForm({...roomForm, price_per_night: e.target.value})}
+                        required
+                        aria-required="true"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="room-capacity">Capacity *</label>
+                      <input
+                        type="number"
+                        id="room-capacity"
+                        value={roomForm.capacity}
+                        onChange={(e) => setRoomForm({...roomForm, capacity: e.target.value})}
+                        required
+                        aria-required="true"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="room-maint-status">Status</label>
+                      <select
+                        id="room-maint-status"
+                        value={roomForm.maintenance_status}
+                        onChange={(e) => setRoomForm({...roomForm, maintenance_status: e.target.value})}
+                      >
+                        <option value="operational">Operational</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="closed">Closed</option>
+                      </select>
+                    </div>
+                    <div className="form-group full-width">
+                      <label htmlFor="room-desc">Description</label>
+                      <textarea
+                        id="room-desc"
+                        value={roomForm.description}
+                        onChange={(e) => setRoomForm({...roomForm, description: e.target.value})}
+                        rows="2"
+                      />
+                    </div>
+                    <div className="form-group full-width">
+                      <label htmlFor="room-image">Image URL</label>
+                      <input
+                        type="text"
+                        id="room-image"
+                        value={roomForm.image_url}
+                        onChange={(e) => setRoomForm({...roomForm, image_url: e.target.value})}
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+                    <div className="form-group full-width">
+                      <label htmlFor="room-amenities">Amenities (comma-separated)</label>
+                      <input
+                        type="text"
+                        id="room-amenities"
+                        value={roomForm.amenities}
+                        onChange={(e) => setRoomForm({...roomForm, amenities: e.target.value})}
+                        placeholder="Free WiFi, Air Conditioning, TV"
+                      />
+                    </div>
+                  </div>
+                  <button type="submit" className="btn-submit">
+                    {editingRoom === 'new' ? 'Add Room' : 'Update Room'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {editingRoom === null && (
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Photo</th>
+                      <th>Room #</th>
+                      <th>Type</th>
+                      <th>Capacity</th>
+                      <th>Price/Night</th>
+                      <th>Status</th>
+                      <th>Amenities</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rooms.map(room => (
+                      <tr key={room.id}>
+                        <td>
+                          {room.image_url ? (
+                            <img
+                              src={room.image_url}
+                              alt={room.room_type}
+                              className="room-thumbnail"
+                              onClick={() => openImageModal(room.image_url)}
+                              onKeyDown={(e) => e.key === 'Enter' && openImageModal(room.image_url)}
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`View image of room ${room.room_number}`}
+                            />
+                          ) : '-'}
+                        </td>
+                        <td>{room.room_number}</td>
+                        <td>{room.room_type}</td>
+                        <td>{room.capacity} guests</td>
+                        <td>RM{room.price_per_night}</td>
+                        <td>
+                          <span className={`status-badge ${
+                            room.maintenance_status === 'operational' ? 'status-available' :
+                            room.maintenance_status === 'maintenance' ? 'status-maintenance' : 'status-occupied'
+                          }`}>
+                            {room.maintenance_status}
+                          </span>
+                        </td>
+                        <td>
+                          {room.amenities ? room.amenities.split(',').slice(0, 2).join(', ') : '-'}
+                          {room.amenities && room.amenities.split(',').length > 2 && '...'}
+                        </td>
+                        <td>
+                          <button
+                            className="btn-small btn-info"
+                            onClick={() => handleEditRoom(room)}
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 

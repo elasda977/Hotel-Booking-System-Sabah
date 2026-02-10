@@ -33,7 +33,7 @@
 }
 
 .room-summary h2 {
-  color: #2c3e50;
+  color: #2B2E33;
   margin: 1.5rem 2rem 0.5rem 2rem;
 }
 
@@ -48,13 +48,13 @@
 .booking-amenities {
   margin: 0 2rem 1.5rem 2rem;
   padding: 1rem;
-  background: #f8f9fa;
+  background: #F5F6F7;
   border-radius: 8px;
 }
 
 .booking-amenities h4 {
   margin: 0 0 1rem 0;
-  color: #2c3e50;
+  color: #2B2E33;
   font-size: 1.1rem;
 }
 
@@ -65,7 +65,7 @@
 }
 
 .amenity-item {
-  color: #555;
+  color: #787F85;
   font-size: 0.9rem;
   display: flex;
   align-items: center;
@@ -76,14 +76,14 @@
 }
 
 .price-summary {
-  background: #f8f9fa;
+  background: #F5F6F7;
   padding: 1.5rem;
   border-radius: 8px;
   margin: 0 2rem 2rem 2rem;
 }
 
 .room-summary .room-info {
-  border-top: 1px solid #eee;
+  border-top: 1px solid #C1C4C8;
   padding-top: 1rem;
 }
 
@@ -93,7 +93,7 @@
 
 .price-summary h3 {
   margin: 0 0 1rem 0;
-  color: #2c3e50;
+  color: #2B2E33;
 }
 
 .total-price {
@@ -111,7 +111,7 @@
 }
 
 .booking-form-container h2 {
-  color: #2c3e50;
+  color: #2B2E33;
   margin-bottom: 1.5rem;
 }
 
@@ -131,9 +131,9 @@
 }
 
 .alert-info {
-  background: #e8f4fd;
-  border: 1px solid #b3d9f2;
-  color: #003580;
+  background: #F5F6F7;
+  border: 1px solid #C1C4C8;
+  color: #2B2E33;
   font-weight: 500;
 }
 
@@ -205,7 +205,7 @@
   border-radius: 50%;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #333;
+  color: #2B2E33;
   display: flex;
   align-items: center;
   justify-content: center;

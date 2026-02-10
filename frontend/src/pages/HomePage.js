@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useToast } from '../components/Toast/ToastContext';
 import './HomePage.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -13,6 +14,7 @@ function HomePage() {
   const [expandedAmenities, setExpandedAmenities] = useState({});
   const [selectedImage, setSelectedImage] = useState(null);
   const navigate = useNavigate();
+  const toast = useToast();
 
   // Search filters
   const [checkIn, setCheckIn] = useState('');
@@ -70,7 +72,7 @@ function HomePage() {
   const handleSearch = useCallback(async () => {
     // Validate dates only if both are provided
     if (checkIn && checkOut && new Date(checkIn) >= new Date(checkOut)) {
-      alert('Check-out date must be after check-in date');
+      toast.warning('Check-out date must be after check-in date');
       return;
     }
 
@@ -117,7 +119,7 @@ function HomePage() {
       setLoading(false);
     } catch (error) {
       console.error('Error searching rooms:', error);
-      alert('Error searching for available rooms. Please try again.');
+      toast.error('Error searching for available rooms. Please try again.');
       setLoading(false);
     }
   }, [allRooms, checkIn, checkOut, guests]);

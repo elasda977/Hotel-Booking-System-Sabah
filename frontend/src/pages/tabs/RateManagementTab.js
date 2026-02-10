@@ -1,15 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import authAxios from '../../utils/auth';
+import { useToast } from '../../components/Toast/ToastContext';
 import './RateManagementTab.css';
 
 function RateManagementTab() {
+  const toast = useToast();
   const [rates, setRates] = useState([]);
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({ name: '', room_category: '', start_date: '', end_date: '', rate_multiplier: 1.2, is_active: true });
   const [editing, setEditing] = useState(null);
   const [historyModal, setHistoryModal] = useState({ show: false, rateId: null, logs: [] });
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const dropdownRef = useRef(null);
 
   useEffect(() => { fetchRates(); fetchCategories(); }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchRates = async () => {
     try {
@@ -31,15 +45,15 @@ function RateManagementTab() {
       const payload = { ...form, rate_multiplier: parseFloat(form.rate_multiplier) };
       if (editing) {
         await authAxios.put(`/rates/${editing.id}`, payload);
-        alert('Rate rule updated!');
+        toast.success('Rate rule updated!');
       } else {
         await authAxios.post('/rates', payload);
-        alert('Rate rule created!');
+        toast.success('Rate rule created!');
       }
       resetForm();
       fetchRates();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to save rate rule');
+      toast.error(err.response?.data?.error || 'Failed to save rate rule');
     }
   };
 
@@ -52,10 +66,10 @@ function RateManagementTab() {
     if (!window.confirm('Delete this rate rule?')) return;
     try {
       await authAxios.delete(`/rates/${id}`);
-      alert('Rate rule deleted!');
+      toast.success('Rate rule deleted!');
       fetchRates();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to delete rate rule');
+      toast.error(err.response?.data?.error || 'Failed to delete rate rule');
     }
   };
 
@@ -116,7 +130,7 @@ function RateManagementTab() {
         </form>
       </div>
 
-      <div className="table-container">
+      <div className="table-container" ref={dropdownRef}>
         <table className="data-table">
           <thead>
             <tr>
@@ -141,10 +155,15 @@ function RateManagementTab() {
                 <td><span className={`status-badge ${r.is_active ? 'status-confirmed' : 'status-cancelled'}`}>{r.is_active ? 'Active' : 'Inactive'}</span></td>
                 <td>{r.created_by_name || '-'}</td>
                 <td>
-                  <div className="action-buttons">
-                    <button className="btn-small btn-info" onClick={() => handleEdit(r)}>Edit</button>
-                    <button className="btn-small btn-secondary" onClick={() => viewHistory(r.id)}>History</button>
-                    <button className="btn-small btn-danger" onClick={() => handleDelete(r.id)}>Delete</button>
+                  <div className="action-dropdown">
+                    <button className="action-dropdown-trigger" onClick={() => setOpenDropdown(openDropdown === r.id ? null : r.id)}>&#8942;</button>
+                    {openDropdown === r.id && (
+                      <div className="action-dropdown-menu">
+                        <button onClick={() => { handleEdit(r); setOpenDropdown(null); }}>Edit</button>
+                        <button onClick={() => { viewHistory(r.id); setOpenDropdown(null); }}>History</button>
+                        <button className="danger" onClick={() => { handleDelete(r.id); setOpenDropdown(null); }}>Delete</button>
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>
